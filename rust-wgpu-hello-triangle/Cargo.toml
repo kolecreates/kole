@@ -1,0 +1,9 @@
+[package]
+name = "rust-wgpu-hello-triangle"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+winit = "0.29"
+wgpu = "22.0.0"
+pollster = "0.3.0"
