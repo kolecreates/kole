@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function processHtmlFiles(directory) {
+function processFiles(directory, transformations) {
   const files = fs.readdirSync(directory);
 
   for (const file of files) {
@@ -13,28 +13,24 @@ function processHtmlFiles(directory) {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
-      processHtmlFiles(filePath);
-    } else if (path.extname(file).toLowerCase() === ".html") {
-      processFile(filePath);
+      processFiles(filePath, transformations);
+    } else {
+      const fileExtension = path.extname(file).toLowerCase();
+      const applicableTransformations = transformations.filter((t) =>
+        t.extensions.includes(fileExtension)
+      );
+      if (applicableTransformations.length > 0) {
+        processFile(filePath, applicableTransformations);
+      }
     }
   }
 }
 
-function processFile(filePath) {
+function processFile(filePath, transformations) {
   let content = fs.readFileSync(filePath, "utf8");
-  const regex = /<!--\s*@import\s+'([^']+)'\s*-->/g;
-  let match;
 
-  while ((match = regex.exec(content)) !== null) {
-    const importPath = match[1];
-    const templatePath = path.join(__dirname, "templates", importPath);
-
-    if (fs.existsSync(templatePath)) {
-      const templateContent = fs.readFileSync(templatePath, "utf8");
-      content = content.replace(match[0], templateContent);
-    } else {
-      console.warn(`Template file not found: ${templatePath}`);
-    }
+  for (const transformation of transformations) {
+    content = transformation.process(content, filePath);
   }
 
   const buildDir = path.join(__dirname, "build");
@@ -45,7 +41,76 @@ function processFile(filePath) {
   fs.writeFileSync(outputPath, content);
 }
 
+const importTransformation = {
+  extensions: [".html"],
+  process: (content, filePath) => {
+    const regex = /<!--\s*@import\s+'([^']+)'\s*-->/g;
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      const importPath = match[1];
+      const templatePath = path.join(__dirname, "templates", importPath);
+
+      if (fs.existsSync(templatePath)) {
+        const templateContent = fs.readFileSync(templatePath, "utf8");
+        content = content.replace(match[0], templateContent);
+      } else {
+        console.warn(`Template file not found: ${templatePath}`);
+      }
+    }
+
+    return content;
+  },
+};
+
+const layoutTransformation = {
+  extensions: [".html"],
+  process: (content, filePath) => {
+    const layoutRegex = /<!--\s*@layout\s+'([^']+)'\s*(\{[^}]+\})?\s*-->/;
+    const match = content.match(layoutRegex);
+
+    if (match) {
+      const layoutPath = match[1];
+      let layoutOptions = {};
+      if (match[2]) {
+        layoutOptions = JSON.parse(match[2].trim());
+      }
+      const templatePath = path.join(__dirname, "templates", layoutPath);
+
+      if (fs.existsSync(templatePath)) {
+        let layoutContent = fs.readFileSync(templatePath, "utf8");
+
+        // Process imports in the layout file
+        layoutContent = importTransformation.process(
+          layoutContent,
+          templatePath
+        );
+
+        // Replace all {{ param }} placeholders with the provided values
+        for (const [key, value] of Object.entries(layoutOptions)) {
+          const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "g");
+          layoutContent = layoutContent.replace(regex, value);
+        }
+
+        // Replace <!-- @slot --> with the content
+        content = content.replace(match[0], ""); // Remove the @layout comment
+        layoutContent = layoutContent.replace(
+          /<!--\s*@slot\s*-->/g,
+          content.trim()
+        );
+
+        return layoutContent;
+      } else {
+        console.warn(`Layout file not found: ${templatePath}`);
+      }
+    }
+
+    return content;
+  },
+};
+
+const transformations = [importTransformation, layoutTransformation];
 const publicDir = path.join(__dirname, "public");
-processHtmlFiles(publicDir);
+processFiles(publicDir, transformations);
 
 console.log("Build completed successfully.");

@@ -1,32 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- @import './head.html' -->
     <title>Kole's Blog</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        margin: 0;
-        padding: 20px;
-        max-width: 800px;
-        margin: 0 auto;
+      .container {
+        display: flex;
+        justify-content: space-between;
       }
-      h1 {
-        color: #333;
+      .main-content {
+        flex: 2;
+        padding-right: 20px;
       }
-      .post {
-        margin-bottom: 30px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 20px;
-      }
-      .post h2 {
-        margin-bottom: 10px;
-      }
-      .post-meta {
-        color: #777;
-        font-size: 0.9em;
+      .sidebar {
+        flex: 1;
+        border-left: 1px solid #eee;
+        padding-left: 20px;
       }
     </style>
   </head>
@@ -34,16 +23,33 @@
     <header>
       <h1>Kole's Blog</h1>
     </header>
-    <main>
-      <article class="post">
-        <h2></h2>
-        <p class="post-meta">Posted on May 1, 2023</p>
-        <p></p>
-        <a href="#">Read more</a>
-      </article>
-    </main>
-    <footer>
-      <p>&copy; Copyright on a public blog? Lol.</p>
-    </footer>
+    <div class="container">
+      <main class="main-content">
+        <h2>About Me</h2>
+        <p>
+          I spend an insane amount of time on the computer and have for many
+          years. I find software deeply facinating. I feel that there are
+          secrets still hidden within the nature of computing.
+        </p>
+        <p>
+          However, computing is just a piece of the puzzle. The world is an
+          integrated system - no part isn't of at least some interest to me.
+        </p>
+        <p>
+          Most important is my wife Anna, Mr. Moose, and our family and friends.
+        </p>
+      </main>
+
+      <aside class="sidebar">
+        <h3>Recent Posts</h3>
+        <article>
+          <h4>Thought Diet</h4>
+          <p class="meta">Posted on July 31, 2024</p>
+          <p>Today I'm starting a thought diet. Here are the guidelines:</p>
+          <a href="notes/thought-diet.html">Read more</a>
+        </article>
+      </aside>
+    </div>
+    <!-- @import './footer.html' -->
   </body>
 </html>
