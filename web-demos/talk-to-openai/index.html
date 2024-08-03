@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talk to OpenAI Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      button {
+        font-size: 18px;
+        padding: 10px 20px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Talk to OpenAI Demo</h1>
+    <button id="recordButton">Start Recording</button>
+    <p id="status"></p>
+
+    <script>
+      let mediaRecorder;
+      let audioChunks = [];
+      const recordButton = document.getElementById("recordButton");
+      const status = document.getElementById("status");
+
+      recordButton.addEventListener("click", toggleRecording);
+
+      async function toggleRecording() {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+          recordButton.textContent = "Start Recording";
+          status.textContent = "Processing...";
+        } else {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.start();
+          recordButton.textContent = "Stop Recording";
+          status.textContent = "Recording...";
+
+          mediaRecorder.addEventListener("dataavailable", (event) => {
+            audioChunks.push(event.data);
+          });
+
+          mediaRecorder.addEventListener("stop", async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            audioChunks = [];
+
+            const formData = new FormData();
+            formData.append("audio", audioBlob, "recording.webm");
+
+            try {
+              const response = await fetch("/upload-audio", {
+                method: "POST",
+                body: formData,
+              });
+
+              if (response.ok) {
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.play();
+                status.textContent = "Playing response...";
+                audio.onended = () => {
+                  status.textContent = "Ready to record";
+                };
+              } else {
+                status.textContent = "Error: " + (await response.text());
+              }
+            } catch (error) {
+              status.textContent = "Error: " + error.message;
+            }
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Recording Demo</title>
+  </head>
+  <body>
+    <h1>Audio Recording Demo</h1>
+    <button id="startRecording">Start Recording</button>
+    <button id="stopRecording" disabled>Stop Recording</button>
+    <p id="status"></p>
+
+    <!-- Add a list to display recorded clips -->
+    <h2>Recorded Clips</h2>
+    <ul id="clipList"></ul>
+
+    <script>
+      let mediaRecorder;
+      let audioChunks = [];
+      let recordingTimeout;
+
+      const startButton = document.getElementById("startRecording");
+      const stopButton = document.getElementById("stopRecording");
+      const statusElement = document.getElementById("status");
+      const clipList = document.getElementById("clipList");
+
+      startButton.addEventListener("click", startRecording);
+      stopButton.addEventListener("click", stopRecording);
+
+      async function startRecording() {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = sendAudioToServer;
+
+        mediaRecorder.start();
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        statusElement.textContent = "Recording... (Max 30 seconds)";
+
+        // Set a timeout to stop recording after 30 seconds
+        recordingTimeout = setTimeout(() => {
+          if (mediaRecorder.state === "recording") {
+            stopRecording();
+          }
+        }, 30000);
+      }
+
+      function stopRecording() {
+        clearTimeout(recordingTimeout);
+        mediaRecorder.stop();
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        statusElement.textContent = "Sending audio to server...";
+      }
+
+      async function sendAudioToServer() {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.webm");
+
+        try {
+          const response = await fetch("/upload-audio", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (response.ok) {
+            statusElement.textContent = "Audio sent successfully!";
+            // Fetch the updated list of clips
+            fetchClips();
+          } else {
+            statusElement.textContent = "Error sending audio to server.";
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          statusElement.textContent = "Error sending audio to server.";
+        }
+
+        audioChunks = [];
+      }
+
+      // Add a function to fetch and display clips
+      async function fetchClips() {
+        try {
+          const response = await fetch("/list-clips");
+          if (response.ok) {
+            const clips = await response.json();
+            displayClips(clips);
+          } else {
+            console.error("Error fetching clips");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }
+
+      // Add a function to display clips in the list
+      function displayClips(clips) {
+        clipList.innerHTML = "";
+        clips.forEach((clip) => {
+          const li = document.createElement("li");
+          const audio = document.createElement("audio");
+          audio.src = `/clips/${clip}`;
+          audio.controls = true;
+          li.appendChild(audio);
+          clipList.appendChild(li);
+        });
+      }
+
+      // Fetch clips when the page loads
+      fetchClips();
+    </script>
+  </body>
+</html>
