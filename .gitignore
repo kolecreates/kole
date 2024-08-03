@@ -57,3 +57,6 @@ jspm_packages/
 target/
 
 web-demos/audio-clip-manager/clips
+
+simple-ssg
+!simple-ssg/

@@ -1,0 +1,14 @@
+{
+  "name": "simple-ssg",
+  "module": "cli.js",
+  "type": "module",
+  "scripts": {
+    "build": "bun build ./cli.js --compile --outfile simple-ssg"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
