@@ -1,0 +1,24 @@
+<!-- @layout './basic-layout.html' { "title": "TCP Relay Server" } -->
+
+<article>
+  <h2>TCP Relay Server</h2>
+  <p class="meta">Posted August 3, 2024</p>
+
+  <p>
+    Just completed the first pass at writing a basic TCP relay server "Written
+    in Rust"™️®. Getting Rust programs to compile has a similar feeling of doing
+    a newspaper sodoku. Its been a good learning experience
+  </p>
+
+  <p>
+    The purpose of this tcp relay server is to eventually act as a relay for
+    replicas in a distributed pubsub cluster. Replicas that receive a message
+    from client A and need to broadcast to client B that is connected to another
+    replica will broadcast the message through the relay.
+  </p>
+
+  <p>
+    Without the relay server, the replicas would need to connect to each other
+    directly, which <i>is</i> a possible alternative btw.
+  </p>
+</article>

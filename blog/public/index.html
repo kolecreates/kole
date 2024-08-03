@@ -6,16 +6,26 @@
     <style>
       .container {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
+        width: 100%;
+        flex: 1;
+        flex-grow: 1;
+        overflow: hidden;
       }
-      .main-content {
+      main {
         flex: 2;
         padding-right: 20px;
       }
-      .sidebar {
+      aside {
         flex: 1;
         border-left: 1px solid #eee;
         padding-left: 20px;
+        overflow-y: auto;
+        max-width: 300px;
+      }
+      header {
+        width: 100%;
+        text-align: center;
       }
     </style>
   </head>
@@ -24,7 +34,7 @@
       <h1>Kole's Blog</h1>
     </header>
     <div class="container">
-      <main class="main-content">
+      <main>
         <h2>About Me</h2>
         <p>
           I spend an insane amount of time on the computer and have for many
@@ -40,19 +50,25 @@
         </p>
       </main>
 
-      <aside class="sidebar">
+      <aside>
         <h3>Recent Posts</h3>
         <article>
           <h4>Thought Diet</h4>
-          <p class="meta">Posted on July 31, 2024</p>
+          <p class="meta">Updated on August 3, 2024</p>
           <p>Today I'm starting a thought diet. Here are the guidelines:</p>
           <a href="posts/thought-diet.html">Read more</a>
         </article>
         <article>
           <h4>S3 as a Database</h4>
-          <p class="meta">Posted on August 1, 2024</p>
+          <p class="meta">Updated on August 3, 2024</p>
           <p>Can S3 be used in place of a database?</p>
           <a href="posts/s3db.html">Read more</a>
+        </article>
+        <article>
+          <h4>TCP Relay Server</h4>
+          <p class="meta">Updated on August 3, 2024</p>
+          <p>"Written in Rust"™️®</p>
+          <a href="posts/tcp-relay-server.html">Read more</a>
         </article>
       </aside>
     </div>

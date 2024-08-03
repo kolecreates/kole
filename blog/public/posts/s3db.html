@@ -2,7 +2,46 @@
 
 <article>
   <h2>S3 as a Database</h2>
-  <p class="meta">Posted on August 1, 2024</p>
-  <p>Can S3 be used in place of a database?</p>
-  <p>Should S3 be used in place of a database?</p>
+  <p class="meta">Posted on August 1, 2024. Updated on August 3, 2024</p>
+  <p>
+    Can S3 be used in place of a database? Should S3 be used in place of a
+    database?
+  </p>
+  <p>
+    I saw a comment on stackoverflow "s3 wasn't designed for that". Perhaps
+    they're right, but this is just an excercise at this point. If it were to
+    work out and actually be good for some situations - then fantastic! If it
+    sucks - then I know more about databases and distributed systems.
+  </p>
+
+  <h4>Notes:</h4>
+  <ul>
+    <li>
+      Each replica of the s3db server will post a file to s3 with it's IP
+      address. Each replica periodically lists the IPs, and inits a tcp
+      connection to any replicas that have a lesser IP than its own. This way
+      all replicas will automatically discover and connect to each other.
+    </li>
+    <li>
+      S3 is strongly consistent but there is no native locking feature, so
+      locking has to be implemented in the s3db server logic. This is probably
+      going to be the greatest source of complexity and latency within the
+      entire system.
+    </li>
+    <li>
+      I have some thoughts on how locking might work, but i'll write more about
+      that later.
+    </li>
+  </ul>
+
+  <h4>Resources:</h4>
+  <ul>
+    <li>
+      <a
+        href="https://docs.aws.amazon.com/athena/latest/ug/performance-tuning-s3-throttling.html"
+      >
+        https://docs.aws.amazon.com/athena/latest/ug/performance-tuning-s3-throttling.html
+      </a>
+    </li>
+  </ul>
 </article>

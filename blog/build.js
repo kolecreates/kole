@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function processFiles(directory, transformations) {
+function processFiles(directory, buildDir, transformations) {
   const files = fs.readdirSync(directory);
 
   for (const file of files) {
@@ -13,27 +13,26 @@ function processFiles(directory, transformations) {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
-      processFiles(filePath, transformations);
+      processFiles(filePath, buildDir, transformations);
     } else {
       const fileExtension = path.extname(file).toLowerCase();
       const applicableTransformations = transformations.filter((t) =>
         t.extensions.includes(fileExtension)
       );
       if (applicableTransformations.length > 0) {
-        processFile(filePath, applicableTransformations);
+        processFile(filePath, buildDir, applicableTransformations);
       }
     }
   }
 }
 
-function processFile(filePath, transformations) {
+function processFile(filePath, buildDir, transformations) {
   let content = fs.readFileSync(filePath, "utf8");
 
   for (const transformation of transformations) {
     content = transformation.process(content, filePath);
   }
 
-  const buildDir = path.join(__dirname, "build");
   const relativePath = path.relative(path.join(__dirname, "public"), filePath);
   const outputPath = path.join(buildDir, relativePath);
 
@@ -109,8 +108,21 @@ const layoutTransformation = {
   },
 };
 
+function copyNonHtmlFiles(directory, buildDir) {
+  const files = fs.readdirSync(directory);
+  for (const file of files) {
+    const filePath = path.join(directory, file);
+    const stat = fs.statSync(filePath);
+    if (!stat.isDirectory() && !file.endsWith(".html")) {
+      fs.copyFileSync(filePath, path.join(buildDir, file));
+    }
+  }
+}
+
 const transformations = [importTransformation, layoutTransformation];
 const publicDir = path.join(__dirname, "public");
-processFiles(publicDir, transformations);
+const buildDir = path.join(__dirname, "build");
+processFiles(publicDir, buildDir, transformations);
+copyNonHtmlFiles(publicDir, buildDir);
 
 console.log("Build completed successfully.");

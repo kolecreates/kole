@@ -1,5 +1,6 @@
 import { watch } from "fs";
 import { $ } from "bun";
+import path from "path";
 
 const BUILD_DIR = "./build";
 
@@ -27,6 +28,23 @@ function injectRefreshScript(content) {
   return content.replace("</body>", `${script}</body>`);
 }
 
+function getContentType(filePath) {
+  const extension = path.extname(filePath);
+  const contentTypeMap = {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "application/javascript",
+    ".json": "application/json",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".gif": "image/gif",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+  };
+  const contentType = contentTypeMap[extension] || "application/octet-stream";
+  return contentType;
+}
+
 // Set up HTTP server
 const httpServer = Bun.serve({
   port: 3000,
@@ -48,13 +66,16 @@ const httpServer = Bun.serve({
     const file = Bun.file(filePath);
     const exists = await file.exists();
     if (exists) {
+      const contentType = getContentType(filePath);
       if (filePath.endsWith(".html")) {
         const content = await file.text();
         return new Response(injectRefreshScript(content), {
-          headers: { "Content-Type": "text/html" },
+          headers: { "Content-Type": contentType },
         });
       }
-      return new Response(file);
+      return new Response(file, {
+        headers: { "Content-Type": contentType },
+      });
     } else {
       return new Response("404 Not Found", { status: 404 });
     }
