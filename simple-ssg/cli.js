@@ -55,7 +55,7 @@ const templatesDir = path.resolve(process.cwd(), options.templates);
 
 switch (command) {
   case "build":
-    build(publicDir, buildDir);
+    build(publicDir, buildDir, templatesDir);
     break;
   case "serve":
     const stopServer = startDevServer(publicDir, buildDir, templatesDir);
