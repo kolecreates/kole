@@ -1,0 +1,14 @@
+{
+  "name": "blog",
+  "type": "module",
+  "scripts": {
+    "dev": "../simple-ssg/simple-ssg serve",
+    "build": "../simple-ssg/simple-ssg build"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
