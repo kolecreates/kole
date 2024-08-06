@@ -94,6 +94,10 @@ todos.forEach((todo)=> {
 const runningTodo = todos.find((todo)=> todo.title === "run");
 // this will persist
 runningTodo.done = true;
+
+// includes
+const hasTodo = todos.includes({ title: 'clean' })
+
 // concat. returns a slice.
 const todaysTodos = db.arrayFrom([{ title: "run" }, { title: "clean" }])
 const tomorrowsTodos = db.arrayFrom([{ title: "work"}, { title: "buy toilet paper" }])
@@ -108,6 +112,27 @@ archived.done = true;
 
 // sort. sorts the array in place, just like a vanilla array.
 const byTimeSpent = todos.sort((a, b)=> a.timeSpent - b.timeSpent)
+
+// convert a bundb array to a js array
+const jsTodos = todos.$toJsArray()
+```
+
+## Set
+
+```ts
+const numbers = db.set("numbers");
+
+// add
+numbers.add(5);
+
+// delete
+numbers.delete(5);
+
+// clear
+numbers.clear();
+
+// has
+numbers.has(5);
 ```
 
 ## Slices
