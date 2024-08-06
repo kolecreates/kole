@@ -1,0 +1,59 @@
+<!-- @layout './basic-layout.html' { "title": "bundb" } -->
+<article>
+  <h2>bundb</h2>
+  <p class="meta">Posted on August 6, 2024</p>
+
+  <p>bundb makes persistence feel like normal javascript maps and arrays</p>
+
+  <p>i've long felt there could be a more idomatic database for javascript.</p>
+
+  <p>i.e. one that feels more like javascript and less an SQL interface</p>
+
+  <ul>
+    <li>
+      the bun (<a href="https://bun.sh" target="_blank">https://bun.sh</a>)
+      runtime has a builtime synchronous sqlite client that is very ergonomic
+      and very performant
+    </li>
+    <li>
+      the synchronous nature of the sqlite client makes the map and array
+      operations feel like their vanilla js counterpart. no
+      promises/async/await/trycatch.
+    </li>
+    <li>
+      the bun node compatability api does not yet have node:cluster (<a
+        href="https://bun.sh/docs/runtime/nodejs-apis"
+        target="_blank"
+        >https://bun.sh/docs/runtime/nodejs-apis</a
+      >). However, it's in the works
+      <a href="https://github.com/oven-sh/bun/pull/11492" target="_blank"
+        >https://github.com/oven-sh/bun/pull/11492</a
+      >.
+    </li>
+    <li>
+      as an alternative to node:cluster, one can you use bun.spawn and
+      bun.serve({ reusePort: true }) to create multiple bun processes that can
+      handle requests concurrently.
+    </li>
+    <li>
+      sqlite WAL mode allows multiple concurrent readers and the writer does not
+      block the readers.
+    </li>
+    <li>
+      sqlite can be easily backed up and restored because it's a single file (2
+      files if including the WAL file which is persisted on macos)
+    </li>
+  </ul>
+
+  <h4>Questions:</h4>
+  <ul>
+    <li>
+      what are the performance/scaling characteristics? So far it seems very
+      good for most low-to-medium scale applications. More on this to come.
+    </li>
+    <li>
+      how to handle the intercept/hooks feature across multiple spawned bun
+      processes? I'm not sure yet.
+    </li>
+  </ul>
+</article>
