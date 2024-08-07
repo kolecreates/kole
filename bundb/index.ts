@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite";
 
 import { type BunDBMap, BunDBMapImpl } from "./lib/map";
+import { type BunDBArray, BunDBArrayImpl } from "./lib/array";
 
 function bundb(path: string) {
   const db = new Database(path);
@@ -8,6 +9,23 @@ function bundb(path: string) {
   const globalIntercepts = new Map<string, ((data: any) => any)[]>();
 
   return {
+    close() {
+      db.close();
+    },
+    array<T>(name: string): BunDBArray<T> {
+      const arrayInstance = BunDBArrayImpl.withIndexAccessSupport<T>(
+        db,
+        name,
+        globalHooks,
+        globalIntercepts
+      );
+      return arrayInstance;
+    },
+    arrayFrom<T>(vanillaArray: T[], name: string): BunDBArray<T> {
+      const bunDBArray = this.array<T>(name);
+      bunDBArray.push(...vanillaArray);
+      return bunDBArray;
+    },
     map<K, V>(name: string): BunDBMap<K, V> {
       const mapInstance = new BunDBMapImpl<K, V>(
         db,
