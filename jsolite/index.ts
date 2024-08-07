@@ -1,10 +1,11 @@
 import { Database } from "bun:sqlite";
 
-import { type BunDBMap, BunDBMapImpl } from "./lib/map";
-import { type BunDBArray, BunDBArrayImpl } from "./lib/array";
+import { type JsoLiteMap, JsoLiteMapImpl } from "./lib/map";
+import { type JsoLiteArray, JsoLiteArrayImpl } from "./lib/array";
 
-function bundb(path: string) {
+function jsolite(path: string) {
   const db = new Database(path);
+  db.run("PRAGMA journal_mode = WAL");
   const globalHooks = new Map<string, Set<(data: any) => void>>();
   const globalIntercepts = new Map<string, ((data: any) => any)[]>();
 
@@ -12,8 +13,8 @@ function bundb(path: string) {
     close() {
       db.close();
     },
-    array<T>(name: string): BunDBArray<T> {
-      const arrayInstance = BunDBArrayImpl.withIndexAccessSupport<T>(
+    array<T>(name: string): JsoLiteArray<T> {
+      const arrayInstance = JsoLiteArrayImpl.withIndexAccessSupport<T>(
         db,
         name,
         globalHooks,
@@ -21,13 +22,13 @@ function bundb(path: string) {
       );
       return arrayInstance;
     },
-    arrayFrom<T>(vanillaArray: T[], name: string): BunDBArray<T> {
-      const bunDBArray = this.array<T>(name);
-      bunDBArray.push(...vanillaArray);
-      return bunDBArray;
+    arrayFrom<T>(vanillaArray: T[], name: string): JsoLiteArray<T> {
+      const jsoliteArray = this.array<T>(name);
+      jsoliteArray.push(...vanillaArray);
+      return jsoliteArray;
     },
-    map<K, V>(name: string): BunDBMap<K, V> {
-      const mapInstance = new BunDBMapImpl<K, V>(
+    map<K, V>(name: string): JsoLiteMap<K, V> {
+      const mapInstance = new JsoLiteMapImpl<K, V>(
         db,
         name,
         globalHooks,
@@ -36,12 +37,12 @@ function bundb(path: string) {
       return mapInstance;
     },
 
-    mapFrom<K, V>(vanillaMap: Map<K, V>, name: string): BunDBMap<K, V> {
-      const bunDBMap = this.map<K, V>(name);
+    mapFrom<K, V>(vanillaMap: Map<K, V>, name: string): JsoLiteMap<K, V> {
+      const jsoLiteMap = this.map<K, V>(name);
       for (const [key, value] of vanillaMap) {
-        bunDBMap.set(key, value);
+        jsoLiteMap.set(key, value);
       }
-      return bunDBMap;
+      return jsoLiteMap;
     },
 
     on(event: string, callback: (data: any) => void): () => void {
@@ -66,4 +67,4 @@ function bundb(path: string) {
   };
 }
 
-export default bundb;
+export default jsolite;

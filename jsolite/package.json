@@ -1,5 +1,5 @@
 {
-  "name": "bundb",
+  "name": "jsolite",
   "version": "0.0.1",
   "module": "index.ts",
   "type": "module",

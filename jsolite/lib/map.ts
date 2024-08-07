@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 
-export interface BunDBMap<K, V> {
+export interface JsoLiteMap<K, V> {
   get(key: K): V | undefined;
   set(key: K, value: V): void;
   has(key: K): boolean;
@@ -9,7 +9,7 @@ export interface BunDBMap<K, V> {
   $intercept(event: string, interceptor: (data: any) => any): void;
 }
 
-export class BunDBMapImpl<K, V> implements BunDBMap<K, V> {
+export class JsoLiteMapImpl<K, V> implements JsoLiteMap<K, V> {
   private db: Database;
   private tableName: string;
   private hooks: Map<string, Set<(data: any) => void>>;

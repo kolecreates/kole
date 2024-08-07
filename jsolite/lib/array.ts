@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 
-export interface BunDBArray<T> {
+export interface JsoLiteArray<T> {
   push(...items: T[]): number;
   pop(): T | undefined;
   shift(): T | undefined;
@@ -12,14 +12,14 @@ export interface BunDBArray<T> {
 }
 
 const indexAccessHandler = {
-  get(target: BunDBArrayImpl<any>, prop: string | symbol) {
+  get(target: JsoLiteArrayImpl<any>, prop: string | symbol) {
     const index = parseInt(prop as string, 10);
     if (!isNaN(index)) {
       return target.get(index);
     }
     return target[prop as keyof typeof target];
   },
-  set(target: BunDBArrayImpl<any>, prop: string | symbol, value: any) {
+  set(target: JsoLiteArrayImpl<any>, prop: string | symbol, value: any) {
     const index = parseInt(prop as string, 10);
     if (!isNaN(index)) {
       target.set(index, value);
@@ -30,20 +30,20 @@ const indexAccessHandler = {
   },
 };
 
-export class BunDBArrayImpl<T> implements BunDBArray<T> {
+export class JsoLiteArrayImpl<T> implements JsoLiteArray<T> {
   static withIndexAccessSupport<T>(
     db: Database,
     tableName: string,
     globalHooks: Map<string, Set<(data: any) => void>>,
     globalIntercepts: Map<string, ((data: any) => any)[]>
-  ): BunDBArray<T> {
-    const arrayImpl = new BunDBArrayImpl<T>(
+  ): JsoLiteArray<T> {
+    const arrayImpl = new JsoLiteArrayImpl<T>(
       db,
       tableName,
       globalHooks,
       globalIntercepts
     );
-    return new Proxy(arrayImpl, indexAccessHandler) as BunDBArray<T>;
+    return new Proxy(arrayImpl, indexAccessHandler) as JsoLiteArray<T>;
   }
 
   private db: Database;
@@ -262,7 +262,7 @@ export class BunDBArrayImpl<T> implements BunDBArray<T> {
   [index: number]: T;
 }
 
-Object.defineProperty(BunDBArrayImpl.prototype, Symbol.iterator, {
+Object.defineProperty(JsoLiteArrayImpl.prototype, Symbol.iterator, {
   enumerable: false,
   writable: true,
   configurable: true,

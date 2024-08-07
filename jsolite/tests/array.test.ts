@@ -1,36 +1,32 @@
 import { expect, test, describe, beforeEach, afterAll } from "bun:test";
-import bundb from "../index";
+import jsolite from "../index";
 
 describe("Array", () => {
-  let db: ReturnType<typeof bundb>;
-  let todos: ReturnType<ReturnType<typeof bundb>["array"]>;
-
-  beforeEach(() => {
-    db = bundb(":memory:");
-    todos = db.array("todos");
-  });
-
-  afterAll(() => {
-    db.close();
-  });
-
   test("push and index access", () => {
+    const db = jsolite(":memory:");
+    const todos = db.array("todos");
     const index = todos.push("go for a run");
     expect(todos[index]).toBe("go for a run");
   });
 
   test("index mutation", () => {
+    const db = jsolite(":memory:");
+    const todos = db.array("todos");
     const index = todos.push("go for a run");
     todos[index] = "go for a run!";
     expect(todos[index]).toBe("go for a run!");
   });
 
   test("push multiple items", () => {
+    const db = jsolite(":memory:");
+    const todos = db.array("todos");
     todos.push("go for a run", "clean room", "eat dinner");
     expect(todos.length).toBe(3);
   });
 
   test("pop", () => {
+    const db = jsolite(":memory:");
+    const todos = db.array("todos");
     todos.push("item1", "item2", "item3");
     const popped = todos.pop();
     expect(popped).toBe("item3");
@@ -38,6 +34,8 @@ describe("Array", () => {
   });
 
   test("shift", () => {
+    const db = jsolite(":memory:");
+    const todos = db.array("todos");
     todos.push("item1", "item2", "item3");
     const shifted = todos.shift();
     expect(shifted).toBe("item1");
@@ -45,6 +43,8 @@ describe("Array", () => {
   });
 
   test("unshift", () => {
+    const db = jsolite(":memory:");
+    const todos = db.array("todos");
     todos.push("item1", "item2");
     todos.unshift("study for test");
     expect(todos[0]).toBe("study for test");
@@ -52,6 +52,8 @@ describe("Array", () => {
   });
 
   test("hooks and intercepts", () => {
+    const db = jsolite(":memory:");
+    const todos = db.array("todos");
     let hookCalled = false;
     const unsubscribe = db.on("array.push", ({ array, items }) => {
       hookCalled = true;
@@ -75,14 +77,14 @@ describe("Array", () => {
   });
 
   test("array performance with complex objects", () => {
-    let db = bundb(":memory:");
+    const db = jsolite(":memory:");
     try {
       const perfArray = db.array<{
         id: number;
         name: string;
         data: { value: number; tags: string[] };
       }>("perfArray");
-      const iterations = 10_000;
+      const iterations = 100_000;
 
       console.time("Insert");
       db.transaction(() => {

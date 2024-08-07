@@ -1,10 +1,12 @@
-<!-- @layout './basic-layout.html' { "title": "bundb" } -->
+<!-- @layout './basic-layout.html' { "title": "jsolite" } -->
 <article>
-  <h2>bundb</h2>
+  <h2>jsolite</h2>
   <p class="meta">Posted on August 6, 2024</p>
 
-  <p>bundb makes persistence feel like normal javascript maps and arrays</p>
-  <a href="https://github.com/kolecreates/kole/tree/main/bundb" target="_blank"
+  <p>javascript object syntax over sqlite</p>
+  <a
+    href="https://github.com/kolecreates/kole/tree/main/jsolite"
+    target="_blank"
     >GITHUB SOURCE CODE</a
   >
 
@@ -16,7 +18,12 @@
     <li>
       the bun (<a href="https://bun.sh" target="_blank">https://bun.sh</a>)
       runtime has a builtime synchronous sqlite client that is very ergonomic
-      and very performant
+      and very performant.
+    </li>
+    <li>
+      The bun client is based on https://www.npmjs.com/package/better-sqlite3 so
+      the hope is that this library can be run on nodejs too by configuring an
+      adapter.
     </li>
     <li>
       the synchronous nature of the sqlite client makes the map and array
@@ -52,12 +59,22 @@
   <ul>
     <li>
       what are the performance/scaling characteristics? So far it seems very
-      good for most low-to-medium scale applications. More on this to come.
+      good for most low-to-medium scale applications. To help with scaling, it
+      is easy to create table partitions and even database partitions. More on
+      this to come.
     </li>
     <li>
       how to handle the intercept/hooks feature across multiple spawned bun
       processes? Because the same code is running on each process, the same
       intercept/hook code will execute. It's that simple.
+    </li>
+    <li>
+      how to achieve zero downtime deployments? I do not think it is possible
+      without the two container versions sharing the same file system. However,
+      I think a couple minutes of downtime is acceptable especially during
+      low-traffic hours. Also, if application code is built ontop a "serverless"
+      runtime, instead of baked into the container image, most deployments won't
+      involve an instance restart/swap. more on this to come.
     </li>
   </ul>
 </article>

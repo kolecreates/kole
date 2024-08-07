@@ -1,13 +1,13 @@
-# bundb
+# jsolite
 
-persisted javascript constructs built on the bun runtime
+javascript object syntax over sqlite. built for bun and hopefully nodejs as well.
 
 ## Map
 
 ```ts
-import bundb from "bundb";
+import jsolite from "jsolite";
 
-const db = bundb(":memory:"); // or supply sqlite file path
+const db = jsolite(":memory:"); // or supply sqlite file path
 
 // supply a persistence key
 const users = db.map("users");
@@ -57,9 +57,9 @@ users.$intercept(...)
 ## Array
 
 ```ts
-import bundb from "bundb";
+import jsolite from "jsolite";
 
-const db = bundb(":memory:");
+const db = jsolite(":memory:");
 
 const todos = db.array("todos");
 
@@ -69,7 +69,7 @@ const i = todos.push("go for a run");
 const todo = todos[i];
 // at
 const todoAt = todos.at(i);
-// slice clones* the section of the array data. bundb will not actually clone the data until a write operation is performed on the slice. read more about slices below.
+// slice clones* the section of the array data. jsolite will not actually clone the data until a write operation is performed on the slice. read more about slices below.
 const todosSlice = todos.slice(...)
 // don't forget to cleanup!
 todosSlice.$drop()
@@ -113,7 +113,7 @@ archived.done = true;
 // sort. sorts the array in place, just like a vanilla array.
 const byTimeSpent = todos.sort((a, b)=> a.timeSpent - b.timeSpent)
 
-// convert a bundb array to a js array
+// convert a jsolite array to a js array
 const jsTodos = todos.$toJsArray()
 ```
 

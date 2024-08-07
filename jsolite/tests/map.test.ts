@@ -1,9 +1,9 @@
 import { expect, test, describe } from "bun:test";
-import bundb from "../index";
+import jsolite from "../index";
 
 describe("Map", () => {
   test("basic operations", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const users = db.map("users");
 
     // Test set and get
@@ -20,7 +20,7 @@ describe("Map", () => {
   });
 
   test("mapFrom", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const vanillaMap = new Map([
       ["alice", { name: "Alice", age: 25 }],
       ["bob", { name: "Bob", age: 35 }],
@@ -32,7 +32,7 @@ describe("Map", () => {
   });
 
   test("hooks", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const users = db.map("users");
     let hookCalled = false;
 
@@ -50,7 +50,7 @@ describe("Map", () => {
   });
 
   test("intercept map set", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const users = db.map("users");
 
     db.intercept("map.set", ({ map, key, value }) => {
@@ -66,7 +66,7 @@ describe("Map", () => {
   });
 
   test("intercept map get", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const users = db.map("users");
 
     users.set("alice", { name: "Alice", age: 30 });
@@ -83,7 +83,7 @@ describe("Map", () => {
   });
 
   test("intercept map delete", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const users = db.map("users");
 
     users.set("bob", { name: "Bob", age: 40 });
@@ -105,7 +105,7 @@ describe("Map", () => {
   });
 
   test("Map<number, number>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const numMap = db.map<number, number>("numMap");
 
     numMap.set(1, 100);
@@ -121,7 +121,7 @@ describe("Map", () => {
   });
 
   test("Map<number, string>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const numStrMap = db.map<number, string>("numStrMap");
 
     numStrMap.set(1, "one");
@@ -137,7 +137,7 @@ describe("Map", () => {
   });
 
   test("Map<string, number>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const strNumMap = db.map<string, number>("strNumMap");
 
     strNumMap.set("one", 1);
@@ -153,7 +153,7 @@ describe("Map", () => {
   });
 
   test("Map<string, string>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const strStrMap = db.map<string, string>("strStrMap");
 
     strStrMap.set("hello", "world");
@@ -169,7 +169,7 @@ describe("Map", () => {
   });
 
   test("Map<string, boolean>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const strBoolMap = db.map<string, boolean>("strBoolMap");
 
     strBoolMap.set("isActive", true);
@@ -185,7 +185,7 @@ describe("Map", () => {
   });
 
   test("Map<number, boolean>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const numBoolMap = db.map<number, boolean>("numBoolMap");
 
     numBoolMap.set(1, true);
@@ -201,7 +201,7 @@ describe("Map", () => {
   });
 
   test("Map<object, string>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const objStrMap = db.map<object, string>("objStrMap");
 
     const key1 = { id: 1, name: "Alice" };
@@ -220,7 +220,7 @@ describe("Map", () => {
   });
 
   test("Map<object, number>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const objNumMap = db.map<object, number>("objNumMap");
 
     const key1 = { x: 10, y: 20 };
@@ -239,7 +239,7 @@ describe("Map", () => {
   });
 
   test("Map<object, object>", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const objObjMap = db.map<object, object>("objObjMap");
 
     const key1 = { type: "user", id: 1 };
@@ -260,7 +260,7 @@ describe("Map", () => {
   });
 
   test("Map performance", () => {
-    const db = bundb(":memory:");
+    const db = jsolite(":memory:");
     const perfMap = db.map<number, string>("perfMap");
     const iterations = 10000;
 
