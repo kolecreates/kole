@@ -8,8 +8,6 @@ function jsolite(path: string) {
   const db = new Database(path);
   db.run("PRAGMA journal_mode = WAL");
   db.fileControl(constants.SQLITE_FCNTL_PERSIST_WAL, 0);
-  const globalHooks = new Map<string, Set<(data: any) => void>>();
-  const globalIntercepts = new Map<string, ((data: any) => any)[]>();
 
   return {
     [Symbol.dispose]() {
@@ -27,13 +25,7 @@ function jsolite(path: string) {
       return array;
     },
     map<K, V>(name: string): JsoLiteMap<K, V> {
-      const mapInstance = new JsoLiteMapImpl<K, V>(
-        db,
-        name,
-        globalHooks,
-        globalIntercepts
-      );
-      return mapInstance;
+      return new JsoLiteMapImpl<K, V>(db, name);
     },
 
     mapFrom<K, V>(vanillaMap: Map<K, V>, name: string): JsoLiteMap<K, V> {
@@ -55,22 +47,6 @@ function jsolite(path: string) {
       return jsoLiteObject;
     },
 
-    on(event: string, callback: (data: any) => void): () => void {
-      if (!globalHooks.has(event)) {
-        globalHooks.set(event, new Set());
-      }
-      globalHooks.get(event)!.add(callback);
-      return () => {
-        globalHooks.get(event)!.delete(callback);
-      };
-    },
-
-    intercept(event: string, interceptor: (data: any) => any): void {
-      if (!globalIntercepts.has(event)) {
-        globalIntercepts.set(event, []);
-      }
-      globalIntercepts.get(event)!.push(interceptor);
-    },
     transaction<T extends (...args: any) => any>(cb: T): T {
       return db.transaction(cb) as unknown as T;
     },
