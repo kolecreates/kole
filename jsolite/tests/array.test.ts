@@ -11,6 +11,15 @@ describe("Array", () => {
     });
   });
 
+  describe("set", () => {
+    test("negative index access", () => {
+      using db = jsolite(":memory:");
+      const todos = db.arrayFrom(["a", "b"], "todos");
+      expect(todos.set(-1, "c")).toBe("c");
+      expect(todos.at(-1)).toBe("c");
+    });
+  });
+
 
   describe("push", () => {
   test("then index access", () => {
@@ -371,6 +380,28 @@ describe("Array", () => {
     });
   });
 
+  describe("findIndex", ()=> {
+    test("returns index", ()=> {
+      using db = jsolite(":memory:");
+      const people = db.array<any>("people");
+      people.push({ name: "joe", age: 35}, { name: "tim",  age: 30}, { name: "alex", age: 24});
+
+      const index = people.findIndex((item)=> item.age == 30);
+
+      expect(index).toBe(1);
+    });
+
+    test("returns undefined", ()=> {
+      using db = jsolite(":memory:");
+      const people = db.array<any>("people");
+      people.push({ name: "joe", age: 35}, { name: "tim",  age: 30}, { name: "alex", age: 24});
+
+      const index = people.findIndex((item)=> item.age == 21);
+
+      expect(index).toBeUndefined();
+    });
+  });
+
   describe("reverse", () => {
     test("returns same array", ()=> {
       using db = jsolite(":memory:");
@@ -382,12 +413,23 @@ describe("Array", () => {
     });
   });
 
-  describe("clear", () => {
+  describe("forEach", () => {
+    test("iterates over every item", () => {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(1, 2, 3, 4, 5, 6, 7, 8, 9);
+      const arr: number[] = [];
+      numbers.forEach((n) => arr.push(n));
+      expect(numbers.toJsArray()).toEqual(arr);
+    });
+  });
+
+  describe("empty", () => {
     test("clears the array", () => {
       using db = jsolite(":memory:");
       const todos = db.array("todos");
       todos.push("eat dinner", "go for a run", "clean room");
-      todos.clear();
+      todos.empty();
       expect(todos.length).toBe(0);
 
       todos.push("eat dinner", "go for a run", "clean room");

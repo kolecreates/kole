@@ -1,10 +1,14 @@
 import { Database } from "bun:sqlite";
+import { array } from "./array";
 
 export interface JsoLiteMap<K, V> {
   get(key: K): V | undefined;
   set(key: K, value: V): void;
   has(key: K): boolean;
   delete(key: K): void;
+  keys(): ReturnType<typeof array<K>>;
+  values(): ReturnType<typeof array<V>>;
+  entries(): ReturnType<typeof array<[K, V]>>;
   $on(event: string, callback: (data: any) => void): () => void;
   $intercept(event: string, interceptor: (data: any) => any): void;
 }
@@ -75,10 +79,49 @@ export class JsoLiteMapImpl<K, V> implements JsoLiteMap<K, V> {
     if (interceptResult === false) {
       return;
     }
-    this.db
-      .query(`DELETE FROM "${this.tableName}" WHERE key = ?`)
-      .run(JSON.stringify(key));
+    this.db.exec(`DELETE FROM "${this.tableName}" WHERE key = ?`, [
+      JSON.stringify(key),
+    ]);
     this.triggerHooks("map.delete", eventData);
+  }
+
+  keys() {
+    const keysArray = array<K>(
+      this.db,
+      `_keys-${this.tableName}-${crypto.randomUUID()}`
+    );
+
+    this.db.exec(
+      `INSERT INTO "${keysArray.name}" (value) SELECT key as value FROM "${this.tableName}"`
+    );
+
+    return keysArray;
+  }
+
+  values() {
+    const valuesArray = array<V>(
+      this.db,
+      `_values-${this.tableName}-${crypto.randomUUID()}`
+    );
+
+    this.db.exec(
+      `INSERT INTO "${valuesArray.name}" (value) SELECT value FROM "${this.tableName}"`
+    );
+
+    return valuesArray;
+  }
+
+  entries() {
+    const valuesArray = array<[K, V]>(
+      this.db,
+      `_values-${this.tableName}-${crypto.randomUUID()}`
+    );
+
+    this.db.exec(
+      `INSERT INTO "${valuesArray.name}" (value) SELECT ('[' || key || ',' || value || ']') as value FROM "${this.tableName}"`
+    );
+
+    return valuesArray;
   }
 
   $on(event: string, callback: (data: any) => void): () => void {

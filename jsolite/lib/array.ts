@@ -104,7 +104,11 @@ export const unshift = (ctx: JsoliteArrayContext, ...items: any[]) => {
 };
 
 export const set = (ctx: JsoliteArrayContext, index: number, value: any) => {
-  const result = ctx.queries.updateAt.get(JSON.stringify(value), index + 1);
+  const result =
+    index < 0
+      ? ctx.queries.updateAt.get(JSON.stringify(value), length(ctx) + index + 1)
+      : ctx.queries.updateAt.get(JSON.stringify(value), index + 1);
+
   return result?.value ? JSON.parse(result.value) : undefined;
 };
 
@@ -196,7 +200,7 @@ export const drop = (ctx: JsoliteArrayContext) => {
   ctx.db.exec(`DROP TABLE "${ctx.name}"`);
 };
 
-export const clear = (ctx: JsoliteArrayContext) => {
+export const empty = (ctx: JsoliteArrayContext) => {
   ctx.db.exec(`DELETE FROM "${ctx.name}"`);
 };
 
@@ -338,6 +342,34 @@ export const reverse = (ctx: JsoliteArrayContext) => {
   }
 };
 
+export const forEach = <T>(
+  ctx: JsoliteArrayContext,
+  callback: (item: T, index: number) => void
+) => {
+  const n = length(ctx);
+
+  for (let i = 0; i < n; i++) {
+    const item = at(ctx, i);
+    callback(item, i);
+  }
+};
+
+export const findIndex = <T>(
+  ctx: JsoliteArrayContext,
+  predicate: (item: T) => boolean
+) => {
+  const n = length(ctx);
+
+  for (let i = 0; i < n; i++) {
+    const item = at(ctx, i);
+    if (predicate(item)) {
+      return i;
+    }
+  }
+
+  return undefined;
+};
+
 export const array = <T extends any>(db: Database, name: string) => {
   let ctx = init(db, name);
   return {
@@ -391,9 +423,15 @@ export const array = <T extends any>(db: Database, name: string) => {
     find(predicate: (item: T) => boolean) {
       return find(ctx, predicate);
     },
+    findIndex(predicate: (item: T) => boolean) {
+      return findIndex(ctx, predicate);
+    },
     reverse() {
       reverse(ctx);
       return this;
+    },
+    forEach(callback: (item: T, index: number) => void) {
+      forEach(ctx, callback);
     },
     rename: (newName: string) => {
       rename(ctx, newName);
@@ -408,8 +446,8 @@ export const array = <T extends any>(db: Database, name: string) => {
         query.finalize();
       });
     },
-    clear: () => {
-      clear(ctx);
+    empty: () => {
+      empty(ctx);
     },
     debug: () => {
       console.log(ctx.queries.selectAll.all());

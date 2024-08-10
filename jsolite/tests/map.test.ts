@@ -19,6 +19,57 @@ describe("Map", () => {
     expect(users.has("joe")).toBe(false);
   });
 
+  describe("keys", () => {
+    test("returns jsolite array", () => {
+      const db = jsolite(":memory:");
+      const vanillaMap = new Map([
+        ["alice", { name: "Alice", age: 25 }],
+        ["bob", { name: "Bob", age: 35 }],
+      ]);
+      const users = db.mapFrom(vanillaMap, "users");
+
+      const keys = users.keys();
+
+      expect(keys.at(0)).toBe("alice");
+      expect(keys.length).toBe(2);
+      keys.drop();
+    });
+  });
+
+  describe("values", () => {
+    test("returns jsolite array", () => {
+      const db = jsolite(":memory:");
+      const vanillaMap = new Map([
+        ["alice", { name: "Alice", age: 25 }],
+        ["bob", { name: "Bob", age: 35 }],
+      ]);
+      const users = db.mapFrom(vanillaMap, "users");
+
+      const values = users.values();
+
+      expect(values.at(0)).toEqual({ name: "Alice", age: 25 });
+      expect(values.length).toBe(2);
+      values.drop();
+    });
+  });
+
+  describe("entries", () => {
+    test("returns jsolite array", () => {
+      const db = jsolite(":memory:");
+      const originalEntries: any[] = [
+        ["alice", { name: "Alice", age: 25 }],
+        ["bob", { name: "Bob", age: 35 }],
+      ];
+      const vanillaMap = new Map(originalEntries);
+      const users = db.mapFrom(vanillaMap, "users");
+
+      const entries = users.entries();
+
+      expect(entries.toJsArray()).toEqual(originalEntries);
+      entries.drop();
+    });
+  });
+
   test("mapFrom", () => {
     const db = jsolite(":memory:");
     const vanillaMap = new Map([

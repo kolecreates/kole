@@ -2,6 +2,7 @@ import { Database, constants } from "bun:sqlite";
 
 import { type JsoLiteMap, JsoLiteMapImpl } from "./lib/map";
 import { array } from "./lib/array";
+import { record } from "./lib/record";
 
 function jsolite(path: string) {
   const db = new Database(path);
@@ -41,6 +42,17 @@ function jsolite(path: string) {
         jsoLiteMap.set(key, value);
       }
       return jsoLiteMap;
+    },
+
+    record<T extends Record<string, any>>(name: string) {
+      return record<T>(db, name);
+    },
+    recordFrom<T extends Record<string, any>>(vanillaObject: T, name: string) {
+      const jsoLiteObject = this.record<T>(name);
+      for (const [key, value] of Object.entries(vanillaObject)) {
+        jsoLiteObject[key as keyof T] = value;
+      }
+      return jsoLiteObject;
     },
 
     on(event: string, callback: (data: any) => void): () => void {
