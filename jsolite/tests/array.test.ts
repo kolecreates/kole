@@ -2,6 +2,16 @@ import { expect, test, describe, beforeEach, afterAll } from "bun:test";
 import jsolite from "../index";
 
 describe("Array", () => {
+
+  describe("at", () => {
+    test("negative index access", () => {
+      using db = jsolite(":memory:");
+      const todos = db.arrayFrom(["a", "b"], "todos");
+      expect(todos.at(-1)).toBe("b");
+    });
+  });
+
+
   describe("push", () => {
   test("then index access", () => {
     using db = jsolite(":memory:");
@@ -250,11 +260,125 @@ describe("Array", () => {
   describe("filter", () => {
     test("returns a new array", () => {
       using db = jsolite(":memory:");
-      const todos = db.array("todos");
+      const todos = db.array<string>("todos");
       todos.push("eat dinner", "go for a run", "clean room");
       const filtered = todos.filter((item) => item.includes("run"));
       expect(filtered.length).toBe(1);
       expect(filtered.at(0)).toBe("go for a run");
+    });
+  });
+
+  describe("sort", () => {
+    test("returns same array", () => {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(3,1,9,2,4,7,4,4,8,6);
+      const sorted = numbers.sort((a, b )=> a - b);
+      expect(sorted.length).toBe(numbers.length);
+      expect(sorted.toJsArray()).toEqual([3,1,9,2,4,7,4,4,8,6].sort());
+    });
+  });
+
+  describe("some", ()=> {
+    test("returns true", () => {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(3,1,9,2,4,7,4,4,8,6);
+
+      expect(numbers.some((n) => n === 9)).toBeTrue();
+    });
+
+    test("returns false", ()=> {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(3,1,9,2,4,7,4,4,8,6);
+      expect(numbers.some((n) => n === 10)).toBeFalse();
+    })
+  });
+
+  describe("every", ()=> {
+    test("returns true", () => {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(3,1,9,2,4,7,4,4,8,6);
+
+      expect(numbers.every((n) => typeof n === 'number')).toBeTrue();
+    });
+
+    test("returns false", ()=> {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(3,1,9,2,4,7,4,4,8,6);
+      expect(numbers.every((n) => n >= 4)).toBeFalse();
+    })
+  });
+
+  describe("map", () => {
+    test("returns new array", ()=> {
+      using db = jsolite(":memory:");
+      const todos = db.array<string>("todos");
+      todos.push("eat dinner", "go for a run", "clean room");
+      const mapped = todos.map((item) => item.toUpperCase());
+      expect(mapped.length).toBe(3);
+      expect(mapped.at(1)).toBe("GO FOR A RUN");
+      expect(todos.at(1)).toBe("go for a run");
+    });
+  });
+
+  describe("reduce", () => {
+    test("returns sum", () => {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(1, 2, 3);
+
+      const sum = numbers.reduce((acc, n) => acc + n, 0);
+
+      expect(sum).toBe(6);
+    });
+  });
+
+  describe("reduceRight", ()=> {
+    test("returns concat", () => {
+      using db = jsolite(":memory:");
+      const words = db.array<string>("words");
+      words.push("world", "hello");
+
+      const phrase = words.reduce((acc, n) => n + acc, "");
+
+      expect(phrase).toBe("helloworld");
+    });
+  });
+
+  describe("find", ()=> {
+    test("returns item", ()=> {
+      using db = jsolite(":memory:");
+      const people = db.array<any>("people");
+      people.push({ name: "joe", age: 35}, { name: "tim",  age: 30}, { name: "alex", age: 24});
+
+      const tim = people.find((item)=> item.age == 30);
+
+      expect(tim.name).toBe("tim");
+    });
+
+    test("returns undefined", ()=> {
+      using db = jsolite(":memory:");
+      const people = db.array<any>("people");
+      people.push({ name: "joe", age: 35}, { name: "tim",  age: 30}, { name: "alex", age: 24});
+
+      const tim = people.find((item)=> item.age == 21);
+
+      expect(tim).toBeUndefined();
+    });
+  });
+
+  describe("reverse", () => {
+    test("returns same array", ()=> {
+      using db = jsolite(":memory:");
+      const numbers = db.array<number>("numbers");
+      numbers.push(1, 2, 3, 4, 5, 6, 7, 8, 9);
+      const reversed = numbers.reverse();
+      expect(reversed.length).toBe(numbers.length);
+      expect(reversed.toJsArray()).toEqual([9, 8, 7, 6, 5, 4, 3, 2, 1]);
     });
   });
 

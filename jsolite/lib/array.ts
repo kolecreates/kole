@@ -70,7 +70,10 @@ export const length = (ctx: JsoliteArrayContext) => {
 };
 
 export const at = (ctx: JsoliteArrayContext, index: number) => {
-  const result = ctx.queries.at.get(index + 1);
+  const result =
+    index < 0
+      ? ctx.queries.at.get(length(ctx) + index + 1)
+      : ctx.queries.at.get(index + 1);
   return result?.value ? JSON.parse(result.value) : undefined;
 };
 
@@ -110,7 +113,7 @@ export const slice = (
   start?: number,
   end?: number
 ) => {
-  const sliceName = `${ctx.name}-${crypto.randomUUID()}`;
+  const sliceName = `_slice-${ctx.name}-${crypto.randomUUID()}`;
   createArrayTable(ctx.db, sliceName);
   const len = length(ctx);
 
@@ -201,20 +204,141 @@ export const filter = (
   ctx: JsoliteArrayContext,
   predicate: (item: any) => boolean
 ) => {
-  const filteredName = `${ctx.name}-filtered`;
+  const filteredName = `_slice-${ctx.name}-${crypto.randomUUID()}`;
   createArrayTable(ctx.db, filteredName);
-  for (let i = 0; i < length(ctx); i++) {
+  const n = length(ctx);
+  for (let i = 0; i < n; i++) {
     const item = at(ctx, i);
     if (predicate(item)) {
-      ctx.db.run(`INSERT INTO "${filteredName}" (value) VALUES (?)`, [
-        JSON.stringify(item),
-      ]);
+      ctx.db.run(
+        `INSERT INTO "${filteredName}" (value) VALUES ((SELECT value FROM "${ctx.name}" WHERE id = ?))`,
+        [i + 1]
+      );
     }
   }
   return filteredName;
 };
 
-export const array = <T>(db: Database, name: string) => {
+export const sort = <T>(
+  ctx: JsoliteArrayContext,
+  compare: (a: T, b: T) => number
+) => {
+  let moved = false;
+  const n = length(ctx);
+
+  do {
+    moved = false;
+    for (let i = 0; i < n - 1; i++) {
+      const a = at(ctx, i);
+      const b = at(ctx, i + 1);
+      const cmp = compare(a, b);
+      if (cmp > 0) {
+        set(ctx, i + 1, a);
+        set(ctx, i, b);
+        moved = true;
+      }
+    }
+  } while (moved);
+};
+
+export const some = <T>(
+  ctx: JsoliteArrayContext,
+  predicate: (item: T) => boolean
+) => {
+  const n = length(ctx);
+
+  for (let i = 0; i < n; i++) {
+    const item = at(ctx, i);
+    if (predicate(item)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const every = <T>(
+  ctx: JsoliteArrayContext,
+  predicate: (item: T) => boolean
+) => {
+  return !some<T>(ctx, (item) => !predicate(item));
+};
+
+export const map = <R, T>(
+  ctx: JsoliteArrayContext,
+  callback: (item: T) => R
+) => {
+  const mappedName = `_slice-${ctx.name}-${crypto.randomUUID()}`;
+  createArrayTable(ctx.db, mappedName);
+  const n = length(ctx);
+  for (let i = 0; i < n; i++) {
+    const item = at(ctx, i);
+    ctx.db.run(`INSERT INTO "${mappedName}" (value) VALUES (?)`, [
+      JSON.stringify(callback(item)),
+    ]);
+  }
+  return mappedName;
+};
+
+export const reduce = <T, R>(
+  ctx: JsoliteArrayContext,
+  callback: (accumulator: R, item: T, index: number) => R,
+  initial: R
+) => {
+  const n = length(ctx);
+  let acc = initial;
+
+  for (let i = 0; i < n; i++) {
+    const item = at(ctx, i);
+    acc = callback(acc, item, i);
+  }
+
+  return acc;
+};
+
+export const reduceRight = <T, R>(
+  ctx: JsoliteArrayContext,
+  callback: (accumulator: R, item: T, index: number) => R,
+  initial: R
+) => {
+  const n = length(ctx);
+  let acc = initial;
+
+  for (let i = n - 1; i >= 0; i--) {
+    const item = at(ctx, i);
+    acc = callback(acc, item, i);
+  }
+
+  return acc;
+};
+
+export const find = <T>(
+  ctx: JsoliteArrayContext,
+  predicate: (item: T) => boolean
+) => {
+  const n = length(ctx);
+
+  for (let i = 0; i < n; i++) {
+    const item = at(ctx, i);
+    if (predicate(item)) {
+      return item as T;
+    }
+  }
+
+  return undefined;
+};
+
+export const reverse = (ctx: JsoliteArrayContext) => {
+  const n = length(ctx);
+  for (let i = 0; i <= Math.floor(n / 2); i++) {
+    const a = at(ctx, i);
+    const b = at(ctx, n - i - 1);
+    set(ctx, i, b);
+    set(ctx, n - i - 1, a);
+  }
+};
+
+export const array = <T extends any>(db: Database, name: string) => {
   let ctx = init(db, name);
   return {
     get name() {
@@ -237,6 +361,39 @@ export const array = <T>(db: Database, name: string) => {
     },
     filter: (predicate: (item: T) => boolean) => {
       return array(ctx.db, filter(ctx, predicate));
+    },
+    sort(compare: (a: T, b: T) => number) {
+      sort(ctx, compare);
+
+      return this;
+    },
+    some(predicate: (item: T) => boolean) {
+      return some(ctx, predicate);
+    },
+    every(predicate: (item: T) => boolean) {
+      return every(ctx, predicate);
+    },
+    map: <R>(callback: (item: T) => R) => {
+      return array(ctx.db, map(ctx, callback));
+    },
+    reduce: <R>(
+      callback: (accumulator: R, item: T, index: number) => R,
+      initial: R
+    ) => {
+      return reduce(ctx, callback, initial);
+    },
+    reduceRight: <R>(
+      callback: (accumulator: R, item: T, index: number) => R,
+      initial: R
+    ) => {
+      return reduceRight(ctx, callback, initial);
+    },
+    find(predicate: (item: T) => boolean) {
+      return find(ctx, predicate);
+    },
+    reverse() {
+      reverse(ctx);
+      return this;
     },
     rename: (newName: string) => {
       rename(ctx, newName);
