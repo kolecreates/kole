@@ -1,31 +1,29 @@
-import { Database } from "bun:sqlite";
+import { Database, constants } from "bun:sqlite";
 
 import { type JsoLiteMap, JsoLiteMapImpl } from "./lib/map";
-import { type JsoLiteArray, JsoLiteArrayImpl } from "./lib/array";
+import { array } from "./lib/array";
 
 function jsolite(path: string) {
   const db = new Database(path);
   db.run("PRAGMA journal_mode = WAL");
+  db.fileControl(constants.SQLITE_FCNTL_PERSIST_WAL, 0);
   const globalHooks = new Map<string, Set<(data: any) => void>>();
   const globalIntercepts = new Map<string, ((data: any) => any)[]>();
 
   return {
+    [Symbol.dispose]() {
+      db.close();
+    },
     close() {
       db.close();
     },
-    array<T>(name: string): JsoLiteArray<T> {
-      const arrayInstance = JsoLiteArrayImpl.withIndexAccessSupport<T>(
-        db,
-        name,
-        globalHooks,
-        globalIntercepts
-      );
-      return arrayInstance;
+    array<T>(name: string) {
+      return array<T>(db, name);
     },
-    arrayFrom<T>(vanillaArray: T[], name: string): JsoLiteArray<T> {
-      const jsoliteArray = this.array<T>(name);
-      jsoliteArray.push(...vanillaArray);
-      return jsoliteArray;
+    arrayFrom<T>(vanillaArray: T[], name: string) {
+      const array = this.array<T>(name);
+      array.push(...vanillaArray);
+      return array;
     },
     map<K, V>(name: string): JsoLiteMap<K, V> {
       const mapInstance = new JsoLiteMapImpl<K, V>(
