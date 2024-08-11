@@ -1,6 +1,5 @@
 import { expect, test, describe, beforeEach, afterAll } from "bun:test";
 import jsolite from "../index";
-
 describe("Array", () => {
 
   describe("at", () => {
@@ -36,16 +35,9 @@ describe("Array", () => {
     expect(todos.length).toBe(3);
   });
 
-  test.skip("a lot of items", () => {
-    using db = jsolite(":memory:");
-    const iterations = 1_000_000;
-    const todos = db.array("todos");
-    for (let i = 0; i < iterations; i++) {
-      todos.push(`item ${i}`);
-    }
-    expect(todos.length).toBe(iterations);
-    });
-  });
+});
+
+
 
   describe("pop", () => {
     test("returns the last item", () => {
@@ -67,21 +59,6 @@ describe("Array", () => {
     test("returns undefined if the array is empty", () => {
       using db = jsolite(":memory:");
       const todos = db.array("todos");
-      expect(todos.pop()).toBe(undefined);
-    });
-
-    test.skip("a lot of items", () => {
-      using db = jsolite(":memory:");
-      const iterations = 1_000_000;
-      const todos = db.array("todos");
-      for (let i = 0; i < iterations; i++) {
-        todos.push(`item ${i}`);
-      }
-      expect(todos.length).toBe(iterations);
-      for (let i = 0; i < iterations; i++) {
-        todos.pop();
-      }
-      expect(todos.length).toBe(0);
       expect(todos.pop()).toBe(undefined);
     });
   });
@@ -458,6 +435,34 @@ describe("Array", () => {
       todos.push("eat dinner", "go for a run", "clean room");
       todos.drop();
       expect(() => todos.length).toThrow();
+    });
+  });
+
+
+  describe.skipIf(process.env.TEST_PERFORMANCE !== "true")("performance", () => {
+    test("push", () => {
+      using db = jsolite(":memory:");
+      const iterations = 100_000;
+      const todos = db.array("todos");
+      for (let i = 0; i < iterations; i++) {
+        todos.push(`item ${i}`);
+      }
+      expect(todos.length).toBe(iterations);
+    });
+
+    test("push then pop", () => {
+      using db = jsolite(":memory:");
+      const iterations = 100_000;
+      const todos = db.array("todos");
+      for (let i = 0; i < iterations; i++) {
+        todos.push(`item ${i}`);
+      }
+      expect(todos.length).toBe(iterations);
+      for (let i = 0; i < iterations; i++) {
+        todos.pop();
+      }
+      expect(todos.length).toBe(0);
+      expect(todos.pop()).toBe(undefined);
     });
   });
 });

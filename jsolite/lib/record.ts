@@ -35,30 +35,34 @@ export const record = <T extends Record<any, any>>(
         return data[prop];
       },
       set(target, prop: string, value: any, receiver: any) {
-        const row = db
-          .prepare<{ data: string }, any>(
-            `SELECT data FROM "${tableName}" WHERE id = 1`
-          )
-          .get();
-        const data = row ? JSON.parse(row.data) : {};
-        data[prop] = value;
-        db.run(`UPDATE "${tableName}" SET data = ? WHERE id = 1`, [
-          JSON.stringify(data),
-        ]);
-        return true;
+        return db.transaction(() => {
+          const row = db
+            .prepare<{ data: string }, any>(
+              `SELECT data FROM "${tableName}" WHERE id = 1`
+            )
+            .get();
+          const data = row ? JSON.parse(row.data) : {};
+          data[prop] = value;
+          db.run(`UPDATE "${tableName}" SET data = ? WHERE id = 1`, [
+            JSON.stringify(data),
+          ]);
+          return true;
+        })();
       },
       deleteProperty(target: any, prop: string) {
-        const row = db
-          .prepare<{ data: string }, any>(
-            `SELECT data FROM "${tableName}" WHERE id = 1`
-          )
-          .get();
-        const data = row ? JSON.parse(row.data) : {};
-        delete data[prop];
-        db.run(`UPDATE "${tableName}" SET data = ? WHERE id = 1`, [
-          JSON.stringify(data),
-        ]);
-        return true;
+        return db.transaction(() => {
+          const row = db
+            .prepare<{ data: string }, any>(
+              `SELECT data FROM "${tableName}" WHERE id = 1`
+            )
+            .get();
+          const data = row ? JSON.parse(row.data) : {};
+          delete data[prop];
+          db.run(`UPDATE "${tableName}" SET data = ? WHERE id = 1`, [
+            JSON.stringify(data),
+          ]);
+          return true;
+        })();
       },
     }
   ) as T & {
